@@ -1,0 +1,218 @@
+import processing.video.*;
+
+
+Capture gWebcam;
+PImage gStage; // key bg img
+PImage gPerformer; // in time img
+PImage[] gPerformerRecs;
+int gPerformerRecsPtr = 0;
+int gRecStep = 15;
+
+Movie gMovie;
+Movie gMovie2;
+Movie gMovie3;
+boolean isPlay = false;
+boolean isPlay2 = false;
+boolean isPlay3 = false;
+
+GridUnit[] gGrid;
+
+int gMode = 3;
+final int gModeCount = 3;
+boolean gWebcamHorizontalMirror = false;
+boolean gWebcamVerticalMirror = false;
+
+//-----------------------------
+//PImage bgLetter;
+//-----------------------------
+
+void setup()
+{
+  //size(800, 600, P2D);
+  //size(displayWidth, displayHeight);
+  //fullScreen(P2D, 1);
+  fullScreen(1);
+  noCursor();
+  colorMode(RGB, 255, 255, 255, 100);
+
+  String[] cameras = Capture.list();
+  if (cameras.length == 0) {
+    println("There are no cameras available for capture.");
+    exit();
+  } else {
+    println("Available cameras:");
+    printArray(cameras);
+    /*for (int i=0; i<cameras.length; i++) {
+     String[] s1=match(cameras[i], "name=IPEVO V4K");
+     String[] s2=match(cameras[i], "fps=30");
+     String[] s3=match(cameras[i], "1920x1080");
+     if (s1 != null && s2 != null && s3 != null) {
+     println(i);
+     gWebcam = new Capture(this, 1920, 1080, cameras[i]);
+     gWebcam.start();
+     }
+     }*/
+    //gWebcam = new Capture(this, 800, 600, cameras[4]);
+    //gWebcam = new Capture(this, 1280, 720, cameras[46]);  // if your laptop is powerful enough. try high qulity. use more memory nice~
+    gWebcam = new Capture(this, 1280, 720, cameras[1]);
+    gWebcam.start();
+  }
+
+  //gWebcam = new Capture(this, 200, 150, 30);
+  gStage = createImage(gWebcam.width, gWebcam.height, ARGB);
+  gPerformer = createImage(gWebcam.width, gWebcam.height, ARGB);
+  gPerformerRecs = new PImage[10];
+  for (int i=0; i<gPerformerRecs.length; i++)
+    gPerformerRecs[i] = createImage(gWebcam.width, gWebcam.height, ARGB);
+
+  //------------------------
+  /*---change the mp3 or mov file for yourself---*/
+  gMovie = new Movie(this, "girlRunning.mp4");
+  gMovie2 = new Movie(this, "girlRunning.mp4");
+  gMovie3 = new Movie(this, "girlRunning.mp4");
+  //------------------------
+
+  gGrid = new GridUnit[22];
+  int index = 0;
+  for (int i=0; i<2; i++)
+    gGrid[index] = new GridUnit((width/2)*i, 0, width/2, height/2, index++);
+  for (int i=0; i<4; i++)
+    gGrid[index] = new GridUnit((width/4)*i, height/2, width/4, height/4, index++);
+  for (int i=0; i<8; i++)
+    gGrid[index] = new GridUnit((width/8)*i, height/4*3, width/8, height/8, index++);
+  for (int i=0; i<8; i++)
+    gGrid[index] = new GridUnit((width/8)*i, height/8*7, width/8, height/8, index++);
+
+  //------------------------
+  //bgLetter = loadImage("iLetter.png");
+  //------------------------
+}
+
+
+void draw()
+{
+  // remove background
+  gPerformer.copy(gWebcam, 0, 0, gWebcam.width, gWebcam.height, 0, 0, gPerformer.width, gPerformer.height);
+  gPerformer.loadPixels();
+  gStage.loadPixels();
+  for (int x=0; x<gWebcam.width; x++)
+  {
+    for (int y=0; y<gWebcam.height; y++)
+    {
+      int i = x + y * gWebcam.width;
+      float r = red(gStage.pixels[i]) - red(gPerformer.pixels[i]);
+      float g = green(gStage.pixels[i]) - green(gPerformer.pixels[i]);
+      float b = blue(gStage.pixels[i]) - blue(gPerformer.pixels[i]);
+
+      if (r+g+b<1) {
+        gPerformer.pixels[i] =  color(0, 0);
+      } else {
+        if (r <= 0) r = 0;
+        if (g <= 0) g = 0;
+        if (b <= 0) b = 0;
+        float gray = (r + g + b) / 3;
+        gPerformer.pixels[i] =  color(gray, 100);
+
+        // show color
+        if (gMode == 8 || gMode == 2 || gMode == 4) gPerformer.pixels[i] =  color(r, g, b, 100);
+      }
+    }
+  }
+  gPerformer.updatePixels();
+
+
+  // record performer every gRecStep draws
+  if (frameCount%gRecStep==0)
+  {
+    gPerformerRecs[gPerformerRecsPtr].copy(gPerformer, 0, 0, gPerformer.width, gPerformer.height, 0, 0, gPerformerRecs[gPerformerRecsPtr].width, gPerformerRecs[gPerformerRecsPtr].height);
+    print(".");
+    gPerformerRecsPtr = (gPerformerRecsPtr+1)%gPerformerRecs.length;
+  }
+
+
+  // draw
+  int index;
+  switch (gMode)
+  {
+  case 0: // debug mode
+    background(0);
+    gGrid[0].paint(gWebcam);
+    gGrid[2].paint(gStage);
+    gGrid[3].paint(gPerformer);
+
+    index = gPerformerRecsPtr;
+    for (int i=0; i<gPerformerRecs.length; i++)
+    {
+      tint(255, 9*i);
+      gGrid[1].paint(gPerformerRecs[index]);
+      gGrid[i+6].paint(gPerformerRecs[index]);
+      index = (index+1)%gPerformerRecs.length;
+    }
+    tint(255, 100);
+    gGrid[1].paint(gPerformer);
+
+    for (int i=0; i<gGrid.length; i++)
+      gGrid[i].sketch();
+    break;
+
+  case 1: // hand mode
+    background(0);
+    tint(255, 100);
+    image(gPerformer, 0, 0, width, height);
+    break;
+
+  case 8: // hand mode (COLOR)
+    background(0);
+    tint(255, 100);
+    image(gPerformer, 0, 0, width, height);
+    break;
+
+  case 2: // hand (COLOR) + movie mode
+    background(0);
+    if (!isPlay) {
+      gMovie.play();
+      isPlay = true;
+    }
+    image(gMovie, 0, 0, width, height);
+    tint(255, 100);
+    image(gPerformer, 0, 0, width, height);
+    break;
+
+  case 3: // black mode
+    background(0);
+    if (isPlay) {
+      gMovie.stop();
+      isPlay = false;
+    }
+    if (isPlay2) {
+      gMovie2.stop();
+      isPlay2 = false;
+    }
+    if (isPlay3) {
+      gMovie3.stop();
+      isPlay3 = false;
+    }
+    break;
+
+  case  4: // hand (COLOR) + movie mode
+    background(0);
+    if (!isPlay2) {
+      gMovie2.play();
+      isPlay2 = true;
+    }
+    image(gMovie2, 0, 0, width, height);
+    tint(255, 100);
+    image(gPerformer, 0, 0, width, height);
+    break;
+
+
+  case 5: // hand
+    background(0);
+    if (!isPlay3) {
+      gMovie3.play();
+      isPlay3 = true;
+    }
+    image(gMovie3, 0, 0, width, height);
+    break;
+  }
+}
