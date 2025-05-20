@@ -1,0 +1,74 @@
+/* video */
+
+void captureEvent(Capture capture)
+{
+  capture.read();
+  //capture.filter(GRAY);
+  //capture.updatePixels();
+}
+
+void movieEvent(Movie movie) {
+  movie.read();
+}
+
+
+/* keyboard */
+
+void keyPressed()
+{
+  if (key==CODED) // UP, DOWN, LEFT, RIGHT arrow keys and ALT, CONTROL, SHIFT
+  {
+    switch (keyCode)
+    {
+    case UP:
+    case DOWN:
+      if (gWebcamVerticalMirror==false)
+        gWebcamVerticalMirror = true;
+      else
+        gWebcamVerticalMirror = false;
+      break;
+
+    case RIGHT:
+    case LEFT:
+      if (gWebcamHorizontalMirror==false)
+        gWebcamHorizontalMirror = true;
+      else
+        gWebcamHorizontalMirror = false;
+      break;
+    }
+  }
+  else
+  {
+    switch (key) // BACKSPACE, TAB, ENTER, RETURN, ESC, and DELETE
+    {
+    case ' ':
+      gStage.copy(gWebcam, 0, 0, gWebcam.width, gWebcam.height, 0, 0, gStage.width, gStage.height);
+      break;
+      
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '8': // show color
+      gMode = int("" + key);
+      println("gMode = " + gMode);
+      break;
+
+    case '=': // +
+      gRecStep--;
+      if (gRecStep<10)
+        gRecStep = 10;
+      println("gRecStep = " + gRecStep);
+      break;
+
+    case '-':
+      gRecStep++;
+      if (gRecStep>10)
+        gRecStep = 10;
+      println("gRecStep = " + gRecStep);
+      break;
+    }
+  }
+}
