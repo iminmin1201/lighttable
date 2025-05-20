@@ -1,0 +1,37 @@
+class GridUnit
+{
+  int x;
+  int y;
+  int unitWidth;
+  int unitHeight;
+  int id;
+
+
+  GridUnit(int x, int y, int unitWidth, int unitHeight, int id)
+  {
+    this.x = x;
+    this.y = y;
+    this.unitWidth = unitWidth;
+    this.unitHeight = unitHeight;
+    this.id = id;
+  }
+
+
+  void sketch()
+  {
+    colorMode(RGB, 255, 255, 255, 100);
+    noFill();
+    stroke(255);
+    rect(x, y, unitWidth, unitHeight);
+    //textMode(SCREEN);
+    textAlign(LEFT, TOP);
+    fill(255);
+    text(id, x+5, y+5);
+  }
+
+
+  void paint(PImage img)
+  {
+    image(img, x, y, unitWidth, unitHeight);
+  }
+}
