@@ -1,0 +1,4 @@
+float myDist(float r1, float g1, float b1, float r2, float g2, float b2)
+{
+  return abs(r1-r2) + abs(g1-g2) + abs(b1-b2);
+}
